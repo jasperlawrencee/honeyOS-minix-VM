@@ -75,20 +75,6 @@ void vga_write_char(char c)
         return;
     }
 
-    if (c == '\b') {
-        if (vga_column > 0) {
-            --vga_column;
-        } else if (vga_row > 0) {
-            --vga_row;
-            vga_column = (VGA_WIDTH - 1);
-        } else {
-            return;
-        }
-
-        VGA_MEMORY[vga_row * VGA_WIDTH + vga_column] = vga_entry(' ', vga_color);
-        return;
-    }
-
     VGA_MEMORY[vga_row * VGA_WIDTH + vga_column] = vga_entry((unsigned char)c, vga_color);
 
     ++vga_column;
