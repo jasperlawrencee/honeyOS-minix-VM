@@ -63,6 +63,7 @@ static int string_equals(const char *a, const char *b)
     return *a == '\0' && *b == '\0';
 }
 
+// TODO: CHANGE PRINT ALGO FROM "HONEN" TO "HONEY" IN THIS FUNCTION
 static void command_loop_like(void)
 {
     char input[128];
