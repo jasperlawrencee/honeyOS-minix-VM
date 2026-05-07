@@ -37,7 +37,9 @@ build/vga.o \
 build/keyboard.o \
 build/machine.o \
 build/panic.o \
-build/memory.o
+build/memory.o \
+build/framebuffer.o \
+build/gui_nuklear.o
 
 all: build/os.iso
 
@@ -76,6 +78,14 @@ build/memory.o: kernel/memory.c
 	@$(MKDIR_BUILD)
 	$(CC) $(CFLAGS) -c $< -o $@
 
+build/framebuffer.o: kernel/framebuffer.c
+	@$(MKDIR_BUILD)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+build/gui_nuklear.o: kernel/gui_nuklear.c
+	@$(MKDIR_BUILD)
+	$(CC) $(filter-out -Werror,$(CFLAGS)) -Wno-unused-function -Wno-unused-parameter -Wno-sign-compare -Wno-implicit-fallthrough -c $< -o $@
+
 build/os.iso: build/kernel.bin grub/grub.cfg
 	@$(MKDIR_ISODIR)
 	$(COPY_FILE) build/kernel.bin build/isodir/boot/kernel.bin $(DEVNULL)
@@ -83,10 +93,21 @@ build/os.iso: build/kernel.bin grub/grub.cfg
 	$(ISO_CMD)
 
 run: build/os.iso
+	$(QEMU_RUN_VGA)
+
+run-serial: build/os.iso
 	$(QEMU_RUN)
 
 run-vga: build/os.iso
 	$(QEMU_RUN_VGA)
+
+run-vnc: build/os.iso
+	@echo "Starting QEMU with VNC on :1 (port 5901)"
+	qemu-system-i386 -cdrom build/os.iso -vnc :1 -no-reboot -no-shutdown -serial mon:stdio &
+
+kill-qemu:
+	@echo "Stopping any running qemu-system-i386 processes (WSL/Linux)"
+	-pkill -f qemu-system-i386 || true
 
 toolchain-check:
 	@if [ "$(OS)" = "Windows_NT" ]; then \
@@ -102,4 +123,4 @@ toolchain-check:
 clean:
 	$(RM_RF)
 
-.PHONY: all run run-vga clean toolchain-check
+.PHONY: all run run-serial run-vga clean toolchain-check

@@ -41,37 +41,47 @@ void keyboard_init(void)
     shift_down = 0;
 }
 
+char keyboard_getchar_nonblock(void)
+{
+    u8 status;
+    u8 scancode;
+    char out;
+
+    status = inb(KBD_STATUS_PORT);
+    if ((status & 0x01) == 0) {
+        return 0;
+    }
+
+    scancode = inb(KBD_DATA_PORT);
+
+    if (scancode == 0x2A || scancode == 0x36) {
+        shift_down = 1;
+        return 0;
+    }
+
+    if (scancode == 0xAA || scancode == 0xB6) {
+        shift_down = 0;
+        return 0;
+    }
+
+    if ((scancode & 0x80) != 0) {
+        return 0;
+    }
+
+    out = scancode_to_char(scancode);
+    if (out != 0) {
+        return out;
+    }
+
+    return 0;
+}
+
 char keyboard_getchar(void)
 {
     for (;;) {
-        u8 status;
-        u8 scancode;
-        char out;
-
-        status = inb(KBD_STATUS_PORT);
-        if ((status & 0x01) == 0) {
-            continue;
-        }
-
-        scancode = inb(KBD_DATA_PORT);
-
-        if (scancode == 0x2A || scancode == 0x36) {
-            shift_down = 1;
-            continue;
-        }
-
-        if (scancode == 0xAA || scancode == 0xB6) {
-            shift_down = 0;
-            continue;
-        }
-
-        if ((scancode & 0x80) != 0) {
-            continue;
-        }
-
-        out = scancode_to_char(scancode);
-        if (out != 0) {
-            return out;
+        char c = keyboard_getchar_nonblock();
+        if (c != 0) {
+            return c;
         }
     }
 }

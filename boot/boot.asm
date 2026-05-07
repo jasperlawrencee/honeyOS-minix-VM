@@ -10,8 +10,20 @@ section .text
 global start
 extern kmain
 
+global boot_multiboot_magic
+global boot_multiboot_info_ptr
+
+section .data
+align 4
+boot_multiboot_magic:    dd 0
+boot_multiboot_info_ptr: dd 0
+
+section .text
+
 start:
     cli
+    mov [boot_multiboot_magic], eax
+    mov [boot_multiboot_info_ptr], ebx
     mov esp, stack_top
     call kmain
 
